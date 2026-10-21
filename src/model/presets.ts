@@ -9,15 +9,15 @@ const prayerRoutine = `# Edit anything; the schedule updates as you type.
 # Drag a task to pin it, click it for details, and move "now" to see time pass.
 
 config:                      # same as sword.yaml
-  time_zone: Asia/Riyadh
+  time_zone: Africa/Cairo    # summer time ends on the night of Oct 29
   day_start: prayer.fajr.start
   horizon_days: 7
   avoid: [tag:prayer]
 
 prayer:                      # stand-in for the sword-prayer plugin (adhan)
-  latitude: 21.4225          # set your own location
-  longitude: 39.8262
-  method: UmmAlQura          # Egyptian, MuslimWorldLeague, Karachi, Dubai, ...
+  latitude: 30.0444          # Cairo; set your own location
+  longitude: 31.2357
+  method: Egyptian           # UmmAlQura, MuslimWorldLeague, Karachi, Dubai, ...
   madhab: shafi
   busy_minutes: 20           # or per prayer: { fajr: 25, dhuhr: 15 }
   iqama_minutes: 0           # minutes from the adhan to when you pray
@@ -33,8 +33,8 @@ events:                      # one-off events, local times
   - id: standup
     title: Team meeting
     date: 2026-10-26
-    start: "06:00"
-    end: "06:30"
+    start: "07:00"
+    end: "07:30"
 
 tasks:                       # same fields as task-file frontmatter
   - id: quran
@@ -180,7 +180,8 @@ tasks:
 `;
 
 export const PRESETS: readonly Preset[] = [
-  { name: 'Prayer routine', now: '2026-10-25T02:15:00Z', source: prayerRoutine },
+  // 05:45 in Cairo, just after Fajr.
+  { name: 'Prayer routine', now: '2026-10-25T02:45:00Z', source: prayerRoutine },
   { name: 'No plugins: day parts', now: '2026-10-25T06:00:00Z', source: dayParts },
   { name: 'Packing (fragmentation)', now: '2026-10-26T06:00:00Z', source: packing },
 ];

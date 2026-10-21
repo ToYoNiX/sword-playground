@@ -6,12 +6,12 @@ import { buildInput } from '../src/model/input.ts';
 import { PRESETS } from '../src/model/presets.ts';
 import { prayerAnchors } from '../src/model/prayer.ts';
 import type { PrayerSettings } from '../src/model/prayer.ts';
-import { addMinutes } from '../src/model/time.ts';
+import { addMinutes, clock } from '../src/model/time.ts';
 
-const mecca: PrayerSettings = {
-  latitude: 21.4225,
-  longitude: 39.8262,
-  method: 'UmmAlQura',
+const cairo: PrayerSettings = {
+  latitude: 30.0444,
+  longitude: 31.2357,
+  method: 'Egyptian',
   madhab: 'shafi',
   busyMinutes: { fajr: 20, dhuhr: 20, asr: 20, maghrib: 20, isha: 20 },
   iqamaMinutes: { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
@@ -24,7 +24,7 @@ function docOf(source: string): PlaygroundDoc {
 }
 
 describe('prayer anchors (adhan)', () => {
-  const anchors = prayerAnchors(mecca, ['2026-10-25', '2026-10-26']);
+  const anchors = prayerAnchors(cairo, ['2026-10-25', '2026-10-26']);
   const find = (id: string, date: string) => anchors.find((a) => a.id === id && a.date === date);
 
   it('provides the five prayers and sunrise for each date, in order', () => {
@@ -47,15 +47,33 @@ describe('prayer anchors (adhan)', () => {
   it('gives each prayer a busy portion, shifted by the iqama time', () => {
     const fajr = find('prayer.fajr', '2026-10-25');
     expect(fajr?.busy).toEqual([{ start: fajr?.start, end: addMinutes(fajr?.start as string, 20) }]);
-    const late = prayerAnchors({ ...mecca, iqamaMinutes: { ...mecca.iqamaMinutes, fajr: 15 } }, ['2026-10-25'])[0];
+    const late = prayerAnchors({ ...cairo, iqamaMinutes: { ...cairo.iqamaMinutes, fajr: 15 } }, ['2026-10-25'])[0];
     expect(late?.busy).toEqual([{ start: addMinutes(late?.start as string, 15), end: addMinutes(late?.start as string, 35) }]);
   });
 
-  it('gives plausible times for Mecca', () => {
-    const local = (iso: string | undefined) => new Date(iso as string).toISOString().slice(11, 16);
-    // Mecca is UTC+3: Fajr around 05:10 and Maghrib around 17:50 local in late October.
-    expect(local(find('prayer.fajr', '2026-10-25')?.start)).toMatch(/^02:0\d|^02:1\d/);
-    expect(local(find('prayer.maghrib', '2026-10-25')?.start)).toMatch(/^14:[45]\d/);
+  // Reference times from the Aladhan API (method 5, Egyptian General Authority
+  // of Survey), which is an independent implementation. Implementations round
+  // differently, so they may differ by a minute.
+  it.each([
+    ['2026-10-25', { fajr: '05:36', sunrise: '07:04', dhuhr: '12:39', asr: '15:50', maghrib: '18:14', isha: '19:32' }],
+    // Egypt's summer time has ended by Oct 30: every time is an hour earlier.
+    ['2026-10-30', { fajr: '04:40', sunrise: '06:07', dhuhr: '11:39', asr: '14:47', maghrib: '17:10', isha: '18:28' }],
+  ])('match published times for Cairo on %s, within a minute', (date, expected) => {
+    const ours = prayerAnchors(cairo, [date]);
+    const at = (id: string) => clock(ours.find((a) => a.id === id)?.start as string, 'Africa/Cairo');
+    const actual = {
+      fajr: at('prayer.fajr'),
+      sunrise: at('sun.rise'),
+      dhuhr: at('prayer.dhuhr'),
+      asr: at('prayer.asr'),
+      maghrib: at('prayer.maghrib'),
+      isha: at('prayer.isha'),
+    };
+    const minutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3));
+    for (const [name, time] of Object.entries(expected)) {
+      const diff = Math.abs(minutes(actual[name as keyof typeof actual]) - minutes(time));
+      expect(diff, `${name}: ours ${actual[name as keyof typeof actual]}, published ${time}`).toBeLessThanOrEqual(1);
+    }
   });
 });
 

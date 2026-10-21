@@ -23,6 +23,9 @@ check(selected.includes('formula') && selected.includes('Why: at prayer.fajr.bus
 
 // Drag: pin Sunday's study one hour later.
 const study = page.locator('.column').first().locator('.block.task', { hasText: 'study' });
+const before = (await study.locator('.task-time').innerText()).slice(0, 5);
+const [h, m] = before.split(':').map(Number);
+const expected = `${String(h + 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 const box = await study.boundingBox();
 await page.mouse.move(box.x + box.width / 2, box.y + 8);
 await page.mouse.down();
@@ -30,7 +33,7 @@ await page.mouse.move(box.x + box.width / 2, box.y + 8 + 66, { steps: 8 });
 await page.mouse.up();
 await page.waitForTimeout(300);
 const pinned = page.locator('.column').first().locator('.block.task.pinned');
-check((await pinned.count()) === 1 && (await pinned.innerText()).includes('06:48'), 'dragging a task down 1h pins it at the new time');
+check((await pinned.count()) === 1 && (await pinned.innerText()).includes(expected), `dragging a task down 1h pins it at the new time (${before} → ${expected})`);
 await page.locator('.tabs button', { hasText: 'Last change' }).click();
 check((await page.locator('.panel-body').innerText()).includes('pinned to a new time'), 'the change list explains the move');
 
