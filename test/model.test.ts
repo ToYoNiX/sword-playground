@@ -15,6 +15,7 @@ const cairo: PrayerSettings = {
   madhab: 'shafi',
   busyMinutes: { fajr: 20, dhuhr: 20, asr: 20, maghrib: 20, isha: 20 },
   iqamaMinutes: { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
+  jumuahMinutes: null,
 };
 
 function docOf(source: string): PlaygroundDoc {
@@ -74,6 +75,22 @@ describe('prayer anchors (adhan)', () => {
       const diff = Math.abs(minutes(actual[name as keyof typeof actual]) - minutes(time));
       expect(diff, `${name}: ours ${actual[name as keyof typeof actual]}, published ${time}`).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe("Jumu'ah", () => {
+  const busyOf = (settings: PrayerSettings, date: string) => {
+    const dhuhr = prayerAnchors(settings, [date]).find((a) => a.id === 'prayer.dhuhr');
+    return (Date.parse(dhuhr?.busy?.[0]?.end as string) - Date.parse(dhuhr?.busy?.[0]?.start as string)) / 60_000;
+  };
+
+  it("makes Friday's Dhuhr take longer", () => {
+    expect(busyOf({ ...cairo, jumuahMinutes: 45 }, '2026-10-30')).toBe(45);
+  });
+
+  it('leaves other days, and Fridays without the setting, alone', () => {
+    expect(busyOf({ ...cairo, jumuahMinutes: 45 }, '2026-10-29')).toBe(20);
+    expect(busyOf(cairo, '2026-10-30')).toBe(20);
   });
 });
 

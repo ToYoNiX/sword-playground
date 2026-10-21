@@ -59,6 +59,7 @@ const prayerSchema = z.strictObject({
   madhab: z.enum(['shafi', 'hanafi']).default('shafi'),
   busy_minutes: perPrayer.default(20),
   iqama_minutes: perPrayer.default(0),
+  jumuah_minutes: minutes.optional(),
 });
 
 const anchorSchema = z.strictObject({
@@ -113,6 +114,7 @@ export function readDocument(source: string): DocResult {
         madhab,
         busyMinutes: perPrayerValues(parsed.data.busy_minutes, 20),
         iqamaMinutes: perPrayerValues(parsed.data.iqama_minutes, 0),
+        jumuahMinutes: parsed.data.jumuah_minutes ?? null,
       };
     } else {
       errors.push(...formatIssues('prayer', parsed.error));

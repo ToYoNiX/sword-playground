@@ -5,7 +5,7 @@
 import { CalculationMethod, Coordinates, Madhab, PrayerTimes } from 'adhan';
 import type { CalculationParameters } from 'adhan';
 import type { AnchorInput } from '@sword/engine';
-import { addDays, isoFromMs } from './time.ts';
+import { addDays, isoFromMs, weekdayOf } from './time.ts';
 
 export const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export type PrayerName = (typeof PRAYERS)[number];
@@ -36,6 +36,8 @@ export interface PrayerSettings {
   busyMinutes: Record<PrayerName, number>;
   /** Minutes from the adhan to when you pray (e.g. the iqama). */
   iqamaMinutes: Record<PrayerName, number>;
+  /** How long Friday's Dhuhr (Jumu'ah) takes, or null to treat Friday like any day. */
+  jumuahMinutes: number | null;
 }
 
 /**
@@ -67,15 +69,16 @@ export function prayerAnchors(settings: PrayerSettings, dates: readonly string[]
     for (const name of PRAYERS) {
       const [start, end] = windows[name];
       if (!isValid(start) || !isValid(end)) continue; // e.g. no Isha in high-latitude summers
+      const jumuah = name === 'dhuhr' && settings.jumuahMinutes !== null && weekdayOf(date) === 'fri';
       const prayStart = start.getTime() + settings.iqamaMinutes[name] * 60_000;
-      const prayEnd = prayStart + settings.busyMinutes[name] * 60_000;
+      const prayEnd = prayStart + (jumuah ? (settings.jumuahMinutes as number) : settings.busyMinutes[name]) * 60_000;
       anchors.push({
         id: `prayer.${name}`,
         date,
         start: isoFromMs(start.getTime()),
         end: isoFromMs(end.getTime()),
         busy: [{ start: isoFromMs(prayStart), end: isoFromMs(prayEnd) }],
-        tags: ['prayer'],
+        tags: jumuah ? ['prayer', 'jumuah'] : ['prayer'],
       });
     }
     if (isValid(today.sunrise)) {

@@ -89,7 +89,7 @@ export function TimeGrid({ days, plan, input, now, selected, highlighted, onSele
                 .filter((b) => inDay(b.start, b.end))
                 .map((b, i) => ({
                   key: `busy:${a.id}@${a.date}:${i}`,
-                  label: a.id.replace(/^prayer\./, ''),
+                  label: a.tags?.includes('jumuah') ? "jumu'ah" : a.id.replace(/^prayer\./, ''),
                   start: b.start,
                   end: b.end,
                   className: a.tags?.includes('prayer') ? 'busy prayer' : 'busy',

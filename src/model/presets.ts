@@ -21,6 +21,7 @@ prayer:                      # stand-in for the sword-prayer plugin (adhan)
   madhab: shafi
   busy_minutes: 20           # or per prayer: { fajr: 25, dhuhr: 15 }
   iqama_minutes: 0           # minutes from the adhan to when you pray
+  jumuah_minutes: 45         # Friday's Dhuhr takes longer; remove to treat Friday like any day
 
 anchors:                     # repeating anchors, local times
   - id: work
