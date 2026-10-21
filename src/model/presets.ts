@@ -37,7 +37,7 @@ events:                      # one-off events, local times
     start: "07:00"
     end: "07:30"
 
-tasks:                       # same fields as task-file frontmatter
+tasks:                       # same properties as task files (Obsidian-style)
   - id: quran
     title: Morning Quran
     duration: 20m
@@ -48,32 +48,30 @@ tasks:                       # same fields as task-file frontmatter
     title: Study Go
     duration: 45m
     repeat: daily
-    window:
-      after: prayer.fajr
-      before: work.start or 08:00
+    after: prayer.fajr
+    before: work.start or 08:00
 
   - id: walk
     title: Walk
     duration: 30m
     repeat: daily
-    window:
-      after: prayer.asr
-      before: prayer.maghrib
+    after: prayer.asr
+    before: prayer.maghrib
 
   - id: report
     title: Write report
     duration: 1h
-    window:
-      before: prayer.dhuhr
+    before: prayer.dhuhr
     deadline: 2026-10-27
     prefer: packed
 
   - id: plants
     title: Water the plants
     duration: 10m
-    repeat: { every: 3 days, since: 2026-10-24 }
-    window:
-      within: evening
+    repeat: daily
+    repeat_every: 3
+    repeat_since: 2026-10-24
+    within: evening
 
   - id: idea
     title: Look into CalDAV libraries
@@ -109,38 +107,36 @@ tasks:
   - id: run
     title: Run
     duration: 30m
-    repeat: { on: [tue, thu, sat] }
-    window:
-      within: morning
+    repeat: weekly
+    repeat_on: [tue, thu, sat]
+    within: morning
 
   - id: gym
     title: Gym
     duration: 1h
     repeat: daily
-    window:
-      within: gym_hours or evening
+    within: gym_hours or evening
 
   - id: read
     title: Read
     duration: 30m
     repeat: daily
-    window:
-      within: night
+    within: night
     prefer: latest
 
   - id: deep-work
     title: Deep work
     duration: 2h
-    repeat: { on: [sat, sun] }
-    window:
-      within: morning or afternoon
+    repeat: weekly
+    repeat_on: [sat, sun]
+    within: morning or afternoon
 
   - id: rent
     title: Pay rent
     duration: 15m
-    repeat: { every: month, on_day: 31 }
-    window:
-      within: evening
+    repeat: monthly
+    repeat_day: 31
+    within: evening
 `;
 
 const packing = `# Fragmentation: free gaps of 2h (Mon), 1h (Tue) and 45m (Wed).
@@ -163,19 +159,22 @@ tasks:
   - id: short
     duration: 30m
     priority: 1
-    window: { after: "08:00", before: "12:00" }
+    after: "08:00"
+    before: "12:00"
     deadline: 2026-10-28
     prefer: earliest
 
   - id: medium
     duration: 1h
-    window: { after: "08:00", before: "12:00" }
+    after: "08:00"
+    before: "12:00"
     deadline: 2026-10-28
     prefer: earliest
 
   - id: long
     duration: 1h45m
-    window: { after: "08:00", before: "12:00" }
+    after: "08:00"
+    before: "12:00"
     deadline: 2026-10-28
     prefer: earliest
 `;

@@ -24,6 +24,7 @@ export function buildInput(doc: PlaygroundDoc, state: PlaygroundState): Schedule
     ...(config.dayStart !== undefined && { dayStart: config.dayStart }),
     ...(config.dayParts !== undefined && { dayParts: config.dayParts }),
     ...(config.avoid !== undefined && { avoid: config.avoid }),
+    ...(config.fixedAnchors !== undefined && { fixedAnchors: config.fixedAnchors }),
     anchors: [...(doc.prayer ? prayerAnchors(doc.prayer, dates) : []), ...repeatingAnchors(doc.anchors, dates, timeZone)],
     events: localEvents(doc.events, timeZone),
     intentions: doc.tasks,

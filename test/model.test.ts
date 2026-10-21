@@ -125,6 +125,39 @@ tasks:
   });
 });
 
+describe('task properties in the document', () => {
+  it('use the flat, Obsidian-style format', () => {
+    const doc = docOf(`
+tasks:
+  - id: Study Go
+    duration: 45m
+    repeat: weekly
+    repeat_on: [mon, thu]
+    after: "08:00"
+    before: "10:00"
+`);
+    expect(doc.tasks[0]).toMatchObject({ id: 'Study Go', repeat: { every: '1 week', on: ['mon', 'thu'] }, window: { after: '08:00', before: '10:00' } });
+  });
+
+  it('reject the old nested format with a pointer to the new one', () => {
+    const result = readDocument('tasks:\n  - { id: walk, duration: 30m, window: { after: "08:00" } }\n');
+    expect(!result.ok && result.errors.join('\n')).toContain('after, before and within');
+  });
+
+  it('can use fixed anchors from config, like sword.yaml', () => {
+    const doc = docOf(`
+config:
+  time_zone: UTC
+  anchors:
+    work: { start: "09:00", end: "17:00", busy: true }
+tasks:
+  - { id: commute, duration: 30m, repeat: daily, before: work, prefer: latest }
+`);
+    const plan = schedule(buildInput(doc, { now: '2026-10-25T00:00:00Z', pins: [], committed: [] }));
+    expect(plan.placements[0]).toMatchObject({ start: '2026-10-25T08:30:00Z' });
+  });
+});
+
 describe('presets behave as described', () => {
   it('prayer routine: Morning Quran follows Fajr every day', () => {
     const preset = PRESETS[0]!;
