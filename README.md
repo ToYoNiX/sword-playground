@@ -33,6 +33,10 @@ Every plan is applied right away and fed back in as the existing placements,
 the way the real app will store them, so stability is visible. State is kept in
 `localStorage`; **Reset state** clears pins, done marks and stored placements.
 
+**Layout:** drag the line between the editor and the calendar to resize them,
+or hide the editor from the top bar. Below 800px wide the editor stacks above
+the calendar, and below 700px the playground opens in day view.
+
 `?preset=N` loads a preset and `?view=day` opens the day view.
 
 ## Prayer times

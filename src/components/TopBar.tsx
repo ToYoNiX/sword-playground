@@ -11,6 +11,8 @@ interface Props {
   onView: (view: View) => void;
   dayLabel: string | null;
   onDayStep: ((step: number) => void) | null;
+  editorOpen: boolean;
+  onToggleEditor: () => void;
 }
 
 const STEPS: [string, number][] = [
@@ -21,10 +23,13 @@ const STEPS: [string, number][] = [
   ['+1d', 1440],
 ];
 
-export function TopBar({ playground, timeZone, view, onView, dayLabel, onDayStep }: Props) {
+export function TopBar({ playground, timeZone, view, onView, dayLabel, onDayStep, editorOpen, onToggleEditor }: Props) {
   const { state, setNow } = playground;
   return (
     <header className="topbar">
+      <button className="editor-toggle" onClick={onToggleEditor} title={editorOpen ? 'Hide the editor' : 'Show the editor'}>
+        {editorOpen ? 'Hide editor' : 'Show editor'}
+      </button>
       <strong className="brand">⚔ Sword playground</strong>
       <select
         value=""
@@ -52,7 +57,9 @@ export function TopBar({ playground, timeZone, view, onView, dayLabel, onDayStep
           </button>
         ))}
         <button onClick={() => setNow(realNow())}>real now</button>
-        <span className="muted">{formatDateTime(state.now, timeZone)} · {timeZone}</span>
+        <span className="muted now-label">
+          {formatDateTime(state.now, timeZone)} · {timeZone}
+        </span>
       </div>
 
       <div className="view-control">

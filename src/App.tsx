@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { yaml } from '@codemirror/lang-yaml';
 import { Panels } from './components/Panels.tsx';
+import { Splitter, useMediaQuery, useStoredSize } from './components/Splitter.tsx';
 import { TimeGrid } from './components/TimeGrid.tsx';
 import { TopBar } from './components/TopBar.tsx';
 import type { View } from './components/TopBar.tsx';
@@ -13,7 +14,16 @@ const extensions = [yaml()];
 export function App() {
   const playground = usePlayground();
   const { shown, run, lastDiff } = playground;
-  const [view, setView] = useState<View>(() => (new URLSearchParams(location.search).get('view') === 'day' ? 'day' : 'week'));
+  const [view, setView] = useState<View>(() => {
+    const requested = new URLSearchParams(location.search).get('view');
+    if (requested === 'day' || requested === 'week') return requested;
+    return matchMedia('(max-width: 700px)').matches ? 'day' : 'week';
+  });
+  // Side by side on wide screens; the editor stacks above the calendar on narrow ones.
+  const stacked = useMediaQuery('(max-width: 800px)');
+  const [editorWidth, setEditorWidth] = useStoredSize('sword-playground:editor-width', 460);
+  const [editorHeight, setEditorHeight] = useStoredSize('sword-playground:editor-height', 260);
+  const [editorOpen, setEditorOpen] = useState(true);
   const [dayIndex, setDayIndex] = useState(0);
   // A counter alongside the id, so clicking the selected task again still opens its details.
   const [selection, setSelection] = useState<{ id: string | null; clicks: number }>({ id: null, clicks: 0 });
@@ -31,8 +41,12 @@ export function App() {
   );
 
   return (
-    <div className="app">
-      <section className="editor-pane">
+    <div className={`app ${stacked ? 'stacked' : ''}`}>
+      <section
+        className="editor-pane"
+        hidden={!editorOpen}
+        style={stacked ? { height: editorHeight } : { width: editorWidth }}
+      >
         <div className="pane-title">
           playground.yaml
           {run.kind === 'error' && <span className="badge error">{run.errors.length} error(s), showing the last good plan</span>}
@@ -44,14 +58,23 @@ export function App() {
           onChange={playground.setSource}
           height="100%"
           basicSetup={{ foldGutter: false }}
+          theme="dark"
         />
       </section>
+      {editorOpen &&
+        (stacked ? (
+          <Splitter orientation="horizontal" size={editorHeight} min={120} reserve={320} onResize={setEditorHeight} />
+        ) : (
+          <Splitter orientation="vertical" size={editorWidth} min={240} reserve={420} onResize={setEditorWidth} />
+        ))}
       <main className="main">
         <TopBar
           playground={playground}
           timeZone={timeZone}
           view={view}
           onView={setView}
+          editorOpen={editorOpen}
+          onToggleEditor={() => setEditorOpen((open) => !open)}
           dayLabel={view === 'day' && allDays[index] ? formatDate(allDays[index].date) : null}
           onDayStep={view === 'day' ? (step) => setDayIndex(Math.min(Math.max(index + step, 0), allDays.length - 1)) : null}
         />

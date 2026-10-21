@@ -60,6 +60,34 @@ await page.waitForTimeout(500);
 check(await page.locator('.badge.error').isVisible(), 'a document error shows a badge');
 check((await page.locator('.block.task').count()) > 0, 'the last good plan stays visible');
 
+// Layout: the divider resizes the editor, and the editor can be hidden.
+const editorPane = page.locator('.editor-pane');
+const widthBefore = (await editorPane.boundingBox()).width;
+const divider = await page.locator('.splitter').boundingBox();
+await page.mouse.move(divider.x + 2, divider.y + 300);
+await page.mouse.down();
+await page.mouse.move(divider.x + 152, divider.y + 300, { steps: 6 });
+await page.mouse.up();
+const widthAfter = (await editorPane.boundingBox()).width;
+check(Math.abs(widthAfter - widthBefore - 150) <= 2, `dragging the divider resizes the editor (${widthBefore}px → ${widthAfter}px)`);
+await page.getByRole('button', { name: 'Hide editor' }).click();
+check(!(await editorPane.isVisible()), 'the editor can be hidden');
+await page.getByRole('button', { name: 'Show editor' }).click();
+
+// Smaller windows: nothing sticks out of the window; narrow ones stack the editor on top.
+for (const [width, height] of [[1050, 760], [620, 900]]) {
+  await page.setViewportSize({ width, height });
+  await page.waitForTimeout(300);
+  const sticking = await page.evaluate(() =>
+    [...document.querySelectorAll('.topbar button, .topbar select, .topbar input, .panels, .grid-scroll')]
+      .filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1).length,
+  );
+  check(sticking === 0, `at ${width}px wide, every control fits in the window`);
+}
+const pane = await editorPane.boundingBox();
+const calendar = await page.locator('.grid-scroll').boundingBox();
+check(pane.y + pane.height <= calendar.y, 'a narrow window stacks the editor above the calendar');
+
 await page.screenshot({ path: 'e2e/last-run.png' });
 check(problems.length === 0, `no console errors${problems.length ? `: ${problems.join(' | ')}` : ''}`);
 await browser.close();
